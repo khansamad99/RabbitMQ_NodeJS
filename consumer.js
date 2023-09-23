@@ -1,7 +1,5 @@
 const amqp = require('amqplib');
 
-const msg = {number: process.argv[2]}
-
 connect()
 async function connect()
 {
@@ -10,8 +8,11 @@ async function connect()
        const channel = await connection.createChannel();
        const result = await channel.assertQueue("jobs");
        
-       channel.sendToQueue("jobs",Buffer.from(JSON.stringify(msg)))
-       console.log("Job Sent successfully")
+       channel.consume("jobs", message => {
+            const input = JSON.parse(message.content.toString())
+            console.log(`Received input as ${input.number}`)
+            channel.ackAll(); // Acknowledging that consumer as received all messages from publisher
+       })
     } catch (error) {
         console.error(error)
     }
